@@ -25,20 +25,20 @@ int allocate_map(void){
 int allocate_pid(void){
 	int i,j;
 	int fg=0;
-	int k=32*length;
+	
 	int tmp;
-	for(i=0;i<k;i++){
+	for(i=0;i<101;i++){
 		tmp=bitmap[(i/32)]&(1<<(i%32));
 		if(tmp==0){
 			bitmap[(i/32)]=bitmap[(i/32)]|(1<<(i%32));
 			fg=1;
 			printf("Sucessful to allocate PID.The PID of new process:%d\n",i);
-			break;
+			
 			}
 		}
 		
 	if(fg==0){
-		printf("Fail to allocate PID.");
+		
 		return -1;
 	}
 }
@@ -53,8 +53,27 @@ void release_pid(int pid){
 	}
 }
 
+
+void *createthread(void *param) {
+    int i, pid,c;
+    int a=rand()%10;
+    time_t t;
+    pid = allocate_pid();
+    printf("\nTID:%u\n",  pthread_self());
+    printf("\nAllocating PID: %d ,will sleep %d sec\n ",pid, a);
+    sleep(a);
+    release_pid(pid);
+    printf("Releasing PID: %d\n", pid);
+    pthread_exit(0);
+    
+}
+
+
 int main(void){
 	int c,i,a,k;
+	pthread_t tid[100];
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
 	printf("-----------------Allocating bitmap----------------------------\n");
 	a=allocate_map();
 	if(a==1){
@@ -62,25 +81,30 @@ int main(void){
 			printf("bitmap[%d]=%d\n",i,bitmap[i]);
 	    	}
     	}
-    else{
-    	printf("Fail to allocate bitmap!\n");
+    	else{
+    		printf("Fail to allocate bitmap!\n");
 	}
 	while(1){
 		printf("--------------------------------------------------------------\n");
-		printf("(1)creat a process (2)delete a process (3)exit\n");
+		printf("(1)creat 100 thread (2)exit\n");
 		printf("Please input your choice: ");
 		scanf(" %d",&c);
 		if(c==1){
 			allocate_pid();
-			for(i=0;i<length;i++){
+			for(i=0; i<length ;i++){
 				printf("bitmap[%d]=%u\n",i,bitmap[i]);
-			}
+				}
+			for(i = 0; i < 101; i++){
+        			pthread_create(&tid[i],&attr,createthread,NULL);
+    			
+				}
+			for(i = 0; i < 101; i++){
+        			pthread_join(tid[i],NULL);
+    				}
 		}
 		else if(c==2){
-			int d;	
-			printf("Please enter the PID you want to delete: ");
-			scanf(" %d",&d);
-			release_pid(d);
+			
+			release_pid(100);
 			for(i=0;i<length;i++){
 				printf("bitmap[%d]=%u\n",i,bitmap[i]);
 			}
